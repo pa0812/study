@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英语单词听写工具</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Arial Rounded MT Bold', 'Arial', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+        
+        .page {
+            display: none;
+            padding: 30px;
+            min-height: 500px;
+        }
+        
+        .active {
+            display: block;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2575fc;
+            margin-bottom: 10px;
+            font-size: 2.2rem;
+        }
+        
+        h2 {
+            color: #6a11cb;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #444;
+        }
+        
+        textarea, input[type="number"], input[type="text"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        textarea:focus, input:focus {
+            border-color: #6a11cb;
+            outline: none;
+        }
+        
+        textarea {
+            height: 150px;
+            resize: vertical;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin: 20px 0;
+        }
+        
+        .checkbox-group input {
+            width: auto;
+            margin-right: 10px;
+        }
+        
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .btn-success {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        /* 听写界面样式 */
+        .dictation-area {
+            text-align: center;
+            padding: 20px 0;
+        }
+        
+        .meaning {
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: #333;
+            min-height: 40px;
+        }
+        
+        .word-input {
+            margin: 20px 0;
+        }
+        
+        .timer {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2575fc;
+            margin: 15px 0;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .feedback {
+            height: 30px;
+            margin: 10px 0;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .correct {
+            color: #4CAF50;
+        }
+        
+        .incorrect {
+            color: #f44336;
+        }
+        
+        /* 结果界面样式 */
+        .results-summary {
+            display: flex;
+            justify-content: space-around;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        
+        .result-item {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            background: #f9f9f9;
+            flex: 1;
+            margin: 10px;
+            min-width: 150px;
+        }
+        
+        .result-value {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .result-label {
+            font-size: 16px;
+            color: #666;
+        }
+        
+        .correct-count .result-value {
+            color: #4CAF50;
+        }
+        
+        .wrong-count .result-value {
+            color: #f44336;
+        }
+        
+        .accuracy .result-value {
+            color: #2575fc;
+        }
+        
+        .wrong-words-list {
+            margin: 30px 0;
+        }
+        
+        .wrong-word-item {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .word-spelling {
+            font-weight: bold;
+        }
+        
+        .word-meaning {
+            color: #666;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 600px) {
+            .container {
+                border-radius: 10px;
+            }
+            
+            .page {
+                padding: 20px 15px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .results-summary {
+                flex-direction: column;
+            }
+            
+            .button-group, .controls {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
+            }
+        }
+        
+        /* 语音按钮样式 */
+        .speak-btn {
+            background: #ff9800;
+            color: white;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            cursor: pointer;
+            font-size: 24px;
+            box-shadow: 0 4px 10px rgba(255, 152, 0, 0.3);
+        }
+        
+        .progress-bar {
+            height: 10px;
+            background: #f0f0f0;
+            border-radius: 5px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        .progress {
+            height: 100%;
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            width: 0%;
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 设置界面 -->
+        <div id="setup-page" class="page active">
+            <h1>英语单词听写工具</h1>
+            <p class="subtitle">老师设置 - 创建单词列表</p>
+            
+            <div class="form-group">
+                <label for="word-list">单词列表（格式：英文 中文，每行一个单词）</label>
+                <textarea id="word-list" placeholder="例如：
+apple 苹果
+banana 香蕉
+orange 橙子
+computer 电脑
+...">apple 苹果
+banana 香蕉
+orange 橙子
+computer 电脑
+school 学校
+teacher 老师
+student 学生
+book 书
+pen 钢笔
+pencil 铅笔</textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="countdown-time">每道题作答时间（秒）</label>
+                <input type="number" id="countdown-time" min="5" max="120" value="30">
+            </div>
+            
+            <div class="checkbox-group">
+                <input type="checkbox" id="shuffle-words">
+                <label for="shuffle-words">打乱单词顺序</label>
+            </div>
+            
+            <div class="button-group">
+                <button id="start-btn" class="btn-primary">开始听写</button>
+            </div>
+        </div>
+        
+        <!-- 听写界面 -->
+        <div id="dictation-page" class="page">
+            <h1>英语单词听写</h1>
+            <div class="progress-bar">
+                <div class="progress" id="progress-bar"></div>
+            </div>
+            
+            <div class="dictation-area">
+                <div class="meaning" id="word-meaning">准备中...</div>
+                
+                <div class="speak-btn" id="speak-btn">🔊</div>
+                
+                <div class="word-input">
+                    <input type="text" id="answer-input" placeholder="请输入您听到的单词" autocomplete="off">
+                </div>
+                
+                <div class="timer" id="timer">30</div>
+                
+                <div class="feedback" id="feedback"></div>
+                
+                <div class="controls">
+                    <button id="submit-btn" class="btn-primary">提交</button>
+                    <button id="skip-btn" class="btn-secondary">跳过</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 结果界面 -->
+        <div id="result-page" class="page">
+            <h1>听写结果</h1>
+            
+            <div class="results-summary">
+                <div class="result-item total-count">
+                    <div class="result-value" id="total-count">0</div>
+                    <div class="result-label">总题数</div>
+                </div>
+                
+                <div class="result-item correct-count">
+                    <div class="result-value" id="correct-count">0</div>
+                    <div class="result-label">正确数</div>
+                </div>
+                
+                <div class="result-item wrong-count">
+                    <div class="result-value" id="wrong-count">0</div>
+                    <div class="result-label">错误数</div>
+                </div>
+                
+                <div class="result-item accuracy">
+                    <div class="result-value" id="accuracy">0%</div>
+                    <div class="result-label">正确率</div>
+                </div>
+            </div>
+            
+            <h2>错题回顾</h2>
+            <div class="wrong-words-list" id="wrong-words-list">
+                <!-- 错题将在这里动态生成 -->
+            </div>
+            
+            <div class="button-group">
+                <button id="try-again-btn" class="btn-primary">再试一次</button>
+                <button id="back-to-setup-btn" class="btn-secondary">返回主页</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 页面元素
+        const setupPage = document.getElementById('setup-page');
+        const dictationPage = document.getElementById('dictation-page');
+        const resultPage = document.getElementById('result-page');
+        
+        const wordListTextarea = document.getElementById('word-list');
+        const countdownTimeInput = document.getElementById('countdown-time');
+        const shuffleWordsCheckbox = document.getElementById('shuffle-words');
+        const startBtn = document.getElementById('start-btn');
+        
+        const wordMeaning = document.getElementById('word-meaning');
+        const speakBtn = document.getElementById('speak-btn');
+        const answerInput = document.getElementById('answer-input');
+        const timerDisplay = document.getElementById('timer');
+        const feedback = document.getElementById('feedback');
+        const submitBtn = document.getElementById('submit-btn');
+        const skipBtn = document.getElementById('skip-btn');
+        const progressBar = document.getElementById('progress-bar');
+        
+        const totalCount = document.getElementById('total-count');
+        const correctCount = document.getElementById('correct-count');
+        const wrongCount = document.getElementById('wrong-count');
+        const accuracy = document.getElementById('accuracy');
+        const wrongWordsList = document.getElementById('wrong-words-list');
+        const tryAgainBtn = document.getElementById('try-again-btn');
+        const backToSetupBtn = document.getElementById('back-to-setup-btn');
+        
+        // 应用状态
+        let words = [];
+        let currentWordIndex = 0;
+        let correctAnswers = 0;
+        let wrongAnswers = 0;
+        let countdownTime = 30;
+        let timer;
+        let currentWordObj = null;
+        let wrongWords = [];
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 绑定按钮事件
+            startBtn.addEventListener('click', startDictation);
+            submitBtn.addEventListener('click', checkAnswer);
+            skipBtn.addEventListener('click', skipWord);
+            speakBtn.addEventListener('click', speakCurrentWord);
+            tryAgainBtn.addEventListener('click', tryAgain);
+            backToSetupBtn.addEventListener('click', backToSetup);
+            
+            // 输入框回车提交
+            answerInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    checkAnswer();
+                }
+            });
+        });
+        
+        // 开始听写
+        function startDictation() {
+            // 解析单词列表
+            const wordListText = wordListTextarea.value.trim();
+            if (!wordListText) {
+                alert('请输入单词列表！');
+                return;
+            }
+            
+            const lines = wordListText.split('\n');
+            words = [];
+            
+            for (let line of lines) {
+                line = line.trim();
+                if (!line) continue;
+                
+                // 简单的解析逻辑：第一个空格前是英文，后面是中文
+                const firstSpaceIndex = line.indexOf(' ');
+                if (firstSpaceIndex === -1) continue;
+                
+                const english = line.substring(0, firstSpaceIndex).trim();
+                const chinese = line.substring(firstSpaceIndex + 1).trim();
+                
+                if (english && chinese) {
+                    words.push({ english, chinese });
+                }
+            }
+            
+            if (words.length === 0) {
+                alert('没有找到有效的单词！请确保使用"英文 中文"的格式，每行一个单词。');
+                return;
+            }
+            
+            // 获取设置
+            countdownTime = parseInt(countdownTimeInput.value) || 30;
+            const shuffle = shuffleWordsCheckbox.checked;
+            
+            // 打乱顺序（如果需要）
+            if (shuffle) {
+                shuffleArray(words);
+            }
+            
+            // 重置状态
+            currentWordIndex = 0;
+            correctAnswers = 0;
+            wrongAnswers = 0;
+            wrongWords = [];
+            
+            // 切换到听写界面
+            switchPage(dictationPage);
+            
+            // 开始第一个单词
+            nextWord();
+        }
+        
+        // 切换到下一个单词
+        function nextWord() {
+            if (currentWordIndex >= words.length) {
+                // 听写结束，显示结果
+                showResults();
+                return;
+            }
+            
+            // 更新进度条
+            const progress = (currentWordIndex / words.length) * 100;
+            progressBar.style.width = `${progress}%`;
+            
+            // 获取当前单词
+            currentWordObj = words[currentWordIndex];
+            
+            // 显示中文意思
+            wordMeaning.textContent = currentWordObj.chinese;
+            
+            // 清空输入框和反馈
+            answerInput.value = '';
+            feedback.textContent = '';
+            answerInput.style.borderColor = '#ddd';
+            
+            // 聚焦输入框
+            answerInput.focus();
+            
+            // 自动朗读单词
+            speakCurrentWord();
+            
+            // 开始倒计时
+            startTimer();
+        }
+        
+        // 朗读当前单词
+        function speakCurrentWord() {
+            if (!currentWordObj) return;
+            
+            // 使用Web Speech API朗读单词[1,4](@ref)
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(currentWordObj.english);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.9; // 稍微放慢语速，适合小学生
+                
+                // 尝试设置英式发音
+                const voices = speechSynthesis.getVoices();
+                const englishVoice = voices.find(voice => 
+                    voice.lang.includes('en') && voice.name.includes('GB')
+                );
+                
+                if (englishVoice) {
+                    utterance.voice = englishVoice;
+                }
+                
+                speechSynthesis.speak(utterance);
+            } else {
+                // 浏览器不支持语音合成
+                feedback.textContent = '您的浏览器不支持语音朗读功能';
+                feedback.className = 'feedback incorrect';
+            }
+        }
+        
+        // 开始倒计时
+        function startTimer() {
+            let timeLeft = countdownTime;
+            timerDisplay.textContent = timeLeft;
+            
+            clearInterval(timer);
+            timer = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = timeLeft;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    // 时间到，自动提交错误答案
+                    handleWrongAnswer('时间到！');
+                }
+            }, 1000);
+        }
+        
+        // 检查答案
+        function checkAnswer() {
+            const userAnswer = answerInput.value.trim().toLowerCase();
+            const correctAnswer = currentWordObj.english.toLowerCase();
+            
+            clearInterval(timer);
+            
+            if (userAnswer === correctAnswer) {
+                // 答案正确
+                handleCorrectAnswer();
+            } else {
+                // 答案错误
+                handleWrongAnswer(`正确答案: ${currentWordObj.english}`);
+            }
+        }
+        
+        // 处理正确答案
+        function handleCorrectAnswer() {
+            correctAnswers++;
+            feedback.textContent = '正确！';
+            feedback.className = 'feedback correct';
+            answerInput.style.borderColor = '#4CAF50';
+            
+            setTimeout(() => {
+                currentWordIndex++;
+                nextWord();
+            }, 1000);
+        }
+        
+        // 处理错误答案
+        function handleWrongAnswer(message) {
+            wrongAnswers++;
+            wrongWords.push(currentWordObj);
+            
+            feedback.textContent = message;
+            feedback.className = 'feedback incorrect';
+            answerInput.style.borderColor = '#f44336';
+            
+            setTimeout(() => {
+                currentWordIndex++;
+                nextWord();
+            }, 1500);
+        }
+        
+        // 跳过单词
+        function skipWord() {
+            clearInterval(timer);
+            handleWrongAnswer(`已跳过，正确答案: ${currentWordObj.english}`);
+        }
+        
+        // 显示结果
+        function showResults() {
+            // 切换到结果界面
+            switchPage(resultPage);
+            
+            // 更新结果统计
+            totalCount.textContent = words.length;
+            correctCount.textContent = correctAnswers;
+            wrongCount.textContent = wrongAnswers;
+            
+            const accuracyValue = words.length > 0 ? Math.round((correctAnswers / words.length) * 100) : 0;
+            accuracy.textContent = `${accuracyValue}%`;
+            
+            // 显示错题列表
+            wrongWordsList.innerHTML = '';
+            
+            if (wrongWords.length === 0) {
+                wrongWordsList.innerHTML = '<p style="text-align:center; color:#666;">太棒了！没有错题！</p>';
+            } else {
+                wrongWords.forEach(word => {
+                    const item = document.createElement('div');
+                    item.className = 'wrong-word-item';
+                    item.innerHTML = `
+                        <div>
+                            <span class="word-spelling">${word.english}</span>
+                            <span class="word-meaning">${word.chinese}</span>
+                        </div>
+                    `;
+                    wrongWordsList.appendChild(item);
+                });
+            }
+        }
+        
+        // 再试一次
+        function tryAgain() {
+            // 使用相同的设置重新开始
+            currentWordIndex = 0;
+            correctAnswers = 0;
+            wrongAnswers = 0;
+            wrongWords = [];
+            
+            switchPage(dictationPage);
+            nextWord();
+        }
+        
+        // 返回设置界面
+        function backToSetup() {
+            switchPage(setupPage);
+        }
+        
+        // 切换页面
+        function switchPage(pageToShow) {
+            setupPage.classList.remove('active');
+            dictationPage.classList.remove('active');
+            resultPage.classList.remove('active');
+            
+            pageToShow.classList.add('active');
+        }
+        
+        // 打乱数组顺序[2](@ref)
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+        
+        // 初始化语音合成API[1](@ref)
+        window.speechSynthesis.onvoiceschanged = function() {
+            // 语音列表加载完成
+        };
+    </script>
+</body>
+</html>
