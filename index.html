@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>英语单词听写工具</title>
     <style>
         :root {
@@ -26,25 +26,25 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            -webkit-tap-highlight-color: transparent;
         }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             color: #333;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             min-height: 100vh;
-            margin: 0;
             font-size: 16px;
             line-height: 1.6;
-            padding: 20px;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
         }
         
         .container {
             background-color: white;
-            padding: 30px;
+            padding: 20px;
             border-radius: var(--border-radius);
             box-shadow: var(--box-shadow);
             max-width: 700px;
@@ -57,6 +57,13 @@
             margin-bottom: 20px;
             color: #2c3e50;
             font-weight: 600;
+            font-size: clamp(1.5rem, 5vw, 2.2rem);
+        }
+        
+        h2 {
+            font-size: clamp(1.2rem, 4vw, 1.8rem);
+            margin: 15px 0;
+            color: #2c3e50;
         }
         
         .form-group {
@@ -69,6 +76,7 @@
             margin-bottom: 8px;
             font-weight: 500;
             color: #555;
+            font-size: clamp(0.9rem, 3vw, 1rem);
         }
         
         textarea {
@@ -95,10 +103,908 @@
         }
         
         input[type="number"] {
-            padding: 8px 12px;
+            padding: 10px 12px;
             border: 1px solid #ddd;
             border-radius: var(--border-radius);
             width: 80px;
+            font-size: 1em;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+        
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 14px 20px;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: clamp(0.9rem, 3vw, 1rem);
+            font-weight: 500;
+            transition: var(--transition);
+            min-width: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            flex: 1;
+            min-height: 50px;
+            touch-action: manipulation;
+        }
+        
+        button:active {
+            transform: scale(0.98);
+        }
+        
+        button:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.3);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-primary:hover, .btn-primary:active {
+            background-color: var(--primary-hover);
+        }
+        
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        
+        .btn-secondary:hover, .btn-secondary:active {
+            background-color: var(--secondary-hover);
+        }
+        
+        .btn-warning {
+            background-color: var(--warning-color);
+            color: #333;
+        }
+        
+        .btn-warning:hover, .btn-warning:active {
+            background-color: var(--warning-hover);
+        }
+        
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+        
+        .btn-danger:hover, .btn-danger:active {
+            background-color: var(--danger-hover);
+        }
+        
+        #meaning {
+            font-size: clamp(1.8rem, 6vw, 2.5rem);
+            margin: 20px 0;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #2c3e50;
+            font-weight: 500;
+            padding: 15px;
+            word-break: break-word;
+        }
+        
+        .input-group {
+            position: relative;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        #input {
+            width: 100%;
+            max-width: 400px;
+            padding: 16px 20px;
+            font-size: clamp(1.1rem, 4vw, 1.4rem);
+            border: 2px solid #ddd;
+            border-radius: var(--border-radius);
+            text-align: center;
+            transition: var(--transition);
+        }
+        
+        #input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+        }
+        
+        #timer {
+            font-size: clamp(1.3rem, 4vw, 1.8rem);
+            font-weight: 600;
+            color: #ff4500;
+            min-width: 60px;
+            padding: 10px;
+            background: #fff9f5;
+            border-radius: var(--border-radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .timer-warning {
+            color: var(--danger-color) !important;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .correct {
+            border-color: var(--success-color) !important;
+            background-color: var(--correct-color) !important;
+        }
+        
+        .incorrect {
+            border-color: var(--danger-color) !important;
+            background-color: var(--incorrect-color) !important;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        .progress {
+            height: 100%;
+            background-color: var(--primary-color);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        
+        .stat-item {
+            flex: 1;
+            min-width: 120px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: var(--border-radius);
+        }
+        
+        .stat-value {
+            font-size: clamp(1.5rem, 5vw, 2.2rem);
+            font-weight: 700;
+            margin: 5px 0;
+        }
+        
+        .accuracy-high {
+            color: var(--success-color);
+        }
+        
+        .accuracy-medium {
+            color: var(--warning-color);
+        }
+        
+        .accuracy-low {
+            color: var(--danger-color);
+        }
+        
+        #result-list {
+            text-align: left;
+            margin: 20px 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .result-item {
+            margin: 10px 0;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: var(--border-radius);
+            border-left: 4px solid #ddd;
+        }
+        
+        .result-item.correct {
+            border-left-color: var(--success-color);
+        }
+        
+        .result-item.incorrect {
+            border-left-color: var(--danger-color);
+        }
+        
+        .word-display {
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: clamp(1rem, 3vw, 1.2rem);
+        }
+        
+        .meaning-display {
+            color: #666;
+            font-size: clamp(0.85rem, 2.5vw, 0.95rem);
+        }
+        
+        .hint {
+            font-size: clamp(0.8rem, 2.5vw, 0.9rem);
+            color: #777;
+            margin-top: 10px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: var(--border-radius);
+            color: white;
+            font-weight: 500;
+            box-shadow: var(--box-shadow);
+            z-index: 1000;
+            transform: translateX(150%);
+            transition: transform 0.3s ease;
+            max-width: calc(100vw - 40px);
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.success {
+            background-color: var(--success-color);
+        }
+        
+        .notification.error {
+            background-color: var(--danger-color);
+        }
+        
+        .notification.info {
+            background-color: var(--secondary-color);
+        }
+        
+        /* 自定义确认对话框样式 */
+        .confirm-dialog {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .confirm-dialog.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .confirm-content {
+            background: white;
+            padding: 25px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+        
+        .confirm-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+        
+        .confirm-buttons button {
+            min-width: 100px;
+            flex: none;
+        }
+        
+        /* 手机端特定样式 */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+                align-items: stretch;
+            }
+            
+            .container {
+                padding: 15px;
+                max-width: 100%;
+            }
+            
+            .button-group {
+                gap: 8px;
+            }
+            
+            button {
+                padding: 12px 15px;
+                min-width: 100px;
+                font-size: 0.9rem;
+                min-height: 44px;
+            }
+            
+            #input {
+                padding: 14px 16px;
+                font-size: 1.2rem;
+            }
+            
+            #meaning {
+                font-size: 1.8rem;
+                padding: 10px;
+            }
+            
+            .input-group {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .stats {
+                flex-direction: column;
+            }
+            
+            .stat-item {
+                min-width: 100%;
+            }
+            
+            .notification {
+                right: 10px;
+                left: 10px;
+                max-width: calc(100vw - 20px);
+            }
+            
+            .confirm-content {
+                padding: 20px;
+                width: 95%;
+            }
+            
+            .confirm-buttons {
+                flex-direction: column;
+            }
+            
+            .confirm-buttons button {
+                min-width: 100%;
+            }
+        }
+        
+        /* 小屏幕手机 */
+        @media (max-width: 480px) {
+            .container {
+                padding: 12px;
+            }
+            
+            button {
+                min-width: 90px;
+                padding: 10px 12px;
+                font-size: 0.85rem;
+            }
+            
+            #input {
+                padding: 12px 14px;
+            }
+            
+            #meaning {
+                font-size: 1.6rem;
+            }
+            
+            textarea {
+                height: 150px;
+                padding: 12px;
+            }
+        }
+        
+        /* 平板和桌面端优化 */
+        @media (min-width: 769px) {
+            body {
+                align-items: center;
+                min-height: 100vh;
+            }
+            
+            .container {
+                padding: 30px;
+            }
+            
+            button {
+                max-width: 180px;
+            }
+        }
+        
+        /* 大屏幕桌面优化 */
+        @media (min-width: 1200px) {
+            .container {
+                max-width: 800px;
+            }
+        }
+        
+        /* 防止iOS缩放 */
+        @media (max-width: 768px) {
+            input, select, textarea {
+                font-size: 16px !important;
+            }
+        }
+        
+        /* 高DPI屏幕优化 */
+        @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+            .container {
+                border: 1px solid rgba(0,0,0,0.1);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 通知区域 -->
+    <div id="notification" class="notification"></div>
+    
+    <!-- 自定义确认对话框 -->
+    <div id="confirm-dialog" class="confirm-dialog">
+        <div class="confirm-content">
+            <h3 id="confirm-title">确认退出</h3>
+            <p id="confirm-message">确定要退出听写吗？当前进度将丢失。</p>
+            <div class="confirm-buttons">
+                <button id="confirm-cancel" class="btn-secondary">取消</button>
+                <button id="confirm-ok" class="btn-danger">确定退出</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 设置界面 -->
+    <div class="container" id="setup">
+        <h1>英语单词听写工具</h1>
+        <div class="form-group">
+            <label for="word-list">单词列表（每行一个单词，格式：单词 中文意思）</label>
+            <textarea id="word-list" placeholder="例如：&#10;apple 苹果&#10;banana 香蕉&#10;computer 电脑"></textarea>
+            <div class="hint">提示：此工具用于记忆重点单词和易忘单词，可以输入单词和中文意思，用空格或Tab键分隔</div>
+        </div>
+        
+        <div class="form-group">
+            <label for="timer-setting">倒计时时间（秒）</label>
+            <input type="number" id="timer-setting" value="30" min="10" max="120">
+        </div>
+        
+        <div class="checkbox-group">
+            <input type="checkbox" id="shuffle" checked>
+            <label for="shuffle">打乱单词顺序</label>
+        </div>
+        
+        <div class="button-group">
+            <button id="start-btn" class="btn-primary">
+                <span>开始听写</span>
+            </button>
+            <button id="example-btn" class="btn-secondary">
+                <span>使用示例单词</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- 听写界面 -->
+    <div class="container hidden" id="dictation">
+        <h1>单词听写</h1>
+        
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+        
+        <div id="meaning"></div>
+        
+        <div class="input-group">
+            <button id="play-btn" class="btn-secondary">
+                <span>播放发音</span>
+            </button>
+            <input type="text" id="input" placeholder="请输入单词拼写" autofocus>
+            <div id="timer">30</div>
+        </div>
+        
+        <div class="button-group">
+            <button id="submit-btn" class="btn-primary">
+                <span>提交答案</span>
+            </button>
+            <button id="skip-btn" class="btn-warning">
+                <span>跳过此题</span>
+            </button>
+            <button id="quit-btn" class="btn-danger">
+                <span>退出听写</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- 结果界面 -->
+    <div class="container hidden" id="results">
+        <h1>听写结果</h1>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <div>总题数</div>
+                <div class="stat-value" id="total">0</div>
+            </div>
+            <div class="stat-item">
+                <div>正确数</div>
+                <div class="stat-value" id="correct">0</div>
+            </div>
+            <div class="stat-item">
+                <div>错误数</div>
+                <div class="stat-value" id="incorrect-count">0</div>
+            </div>
+            <div class="stat-item">
+                <div>正确率</div>
+                <div class="stat-value" id="accuracy">0%</div>
+            </div>
+        </div>
+        
+        <h2>答题详情</h2>
+        <div id="result-list"></div>
+        
+        <div class="button-group">
+            <button id="retry-btn" class="btn-primary">
+                <span>再试一次</span>
+            </button>
+            <button id="back-btn" class="btn-secondary">
+                <span>返回主页</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 应用状态管理
+        const AppState = {
+            words: [],
+            currentIndex: 0,
+            correctCount: 0,
+            incorrect: [],
+            timerInterval: null,
+            remainingTime: 0,
+            timerSetting: 30,
+            shuffle: true,
+            results: [],
+            confirmCallback: null
+        };
+
+        // DOM元素引用
+        const DOM = {
+            setup: document.getElementById('setup'),
+            dictation: document.getElementById('dictation'),
+            results: document.getElementById('results'),
+            wordList: document.getElementById('word-list'),
+            timerSetting: document.getElementById('timer-setting'),
+            shuffle: document.getElementById('shuffle'),
+            meaning: document.getElementById('meaning'),
+            input: document.getElementById('input'),
+            timer: document.getElementById('timer'),
+            progress: document.getElementById('progress'),
+            total: document.getElementById('total'),
+            correct: document.getElementById('correct'),
+            incorrectCount: document.getElementById('incorrect-count'),
+            accuracy: document.getElementById('accuracy'),
+            resultList: document.getElementById('result-list'),
+            notification: document.getElementById('notification'),
+            confirmDialog: document.getElementById('confirm-dialog'),
+            confirmTitle: document.getElementById('confirm-title'),
+            confirmMessage: document.getElementById('confirm-message'),
+            confirmCancel: document.getElementById('confirm-cancel'),
+            confirmOk: document.getElementById('confirm-ok')
+        };
+
+        // 按钮引用
+        const Buttons = {
+            start: document.getElementById('start-btn'),
+            example: document.getElementById('example-btn'),
+            play: document.getElementById('play-btn'),
+            submit: document.getElementById('submit-btn'),
+            skip: document.getElementById('skip-btn'),
+            quit: document.getElementById('quit-btn'),
+            retry: document.getElementById('retry-btn'),
+            back: document.getElementById('back-btn')
+        };
+
+        // 初始化应用
+        function initApp() {
+            setupEventListeners();
+            loadExampleWords();
+            
+            // 防止手机端键盘弹出时页面布局错乱
+            window.addEventListener('resize', function() {
+                if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
+                    window.setTimeout(function() {
+                        document.activeElement.scrollIntoViewIfNeeded();
+                    }, 100);
+                }
+            });
+        }
+
+        // 设置事件监听器
+        function setupEventListeners() {
+            Buttons.start.addEventListener('click', startDictation);
+            Buttons.example.addEventListener('click', loadExampleWords);
+            Buttons.play.addEventListener('click', playWord);
+            Buttons.submit.addEventListener('click', submitAnswer);
+            Buttons.skip.addEventListener('click', skipQuestion);
+            Buttons.quit.addEventListener('click', showQuitConfirm);
+            Buttons.retry.addEventListener('click', retry);
+            Buttons.back.addEventListener('click', backToSetup);
+            
+            // 确认对话框事件
+            DOM.confirmCancel.addEventListener('click', hideConfirmDialog);
+            DOM.confirmOk.addEventListener('click', function() {
+                if (AppState.confirmCallback) {
+                    AppState.confirmCallback();
+                }
+                hideConfirmDialog();
+            });
+            
+            DOM.input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    submitAnswer();
+                }
+            });
+            
+            DOM.timerSetting.addEventListener('change', function() {
+                const value = parseInt(this.value);
+                if (value < 10) this.value = 10;
+                if (value > 120) this.value = 120;
+            });
+            
+            // 触摸设备优化
+            DOM.input.addEventListener('touchstart', function(e) {
+                e.stopPropagation();
+            });
+            
+            // 防止双击缩放
+            let lastTouchEnd = 0;
+            document.addEventListener('touchend', function (event) {
+                const now = (new Date()).getTime();
+                if (now - lastTouchEnd <= 300) {
+                    event.preventDefault();
+                }
+                lastTouchEnd = now;
+            }, false);
+        }
+
+        // 显示确认对话框
+        function showConfirmDialog(title, message, callback) {
+            DOM.confirmTitle.textContent = title;
+            DOM.confirmMessage.textContent = message;
+            AppState.confirmCallback = callback;
+            DOM.confirmDialog.classList.add('show');
+        }
+
+        // 隐藏确认对话框
+        function hideConfirmDialog() {
+            DOM.confirmDialog.classList.remove('show');
+            AppState.confirmCallback = null;
+        }
+
+        // 显示退出确认
+        function showQuitConfirm() {
+            showConfirmDialog('确认退出', '确定要退出听写吗？当前进度将丢失。', quitDictation);
+        }
+
+        // 加载示例单词
+        function loadExampleWords() {
+            const exampleWords = [
+                "apple 苹果",
+                "banana 香蕉",
+                "computer 电脑",
+                "education 教育",
+                "beautiful 美丽的",
+                "important 重要的",
+                "restaurant 餐厅",
+                "university 大学",
+                "technology 技术",
+                "communication 沟通"
+            ].join('\n');
+            
+            DOM.wordList.value = exampleWords;
+            showNotification('已加载示例单词列表', 'info');
+        }
+
+        // 显示通知
+        function showNotification(message, type = 'info') {
+            DOM.notification.textContent = message;
+            DOM.notification.className = `notification ${type}`;
+            DOM.notification.classList.add('show');
+            
+            setTimeout(() => {
+                DOM.notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // 开始听写
+        function startDictation() {
+            const list = DOM.wordList.value.trim().split('\n');
+            AppState.words = list.map(line => {
+                // 支持空格和Tab分隔
+                const parts = line.split(/\s+/);
+                if (parts.length < 2) return null;
+                
+                return {
+                    eng: parts[0].trim(),
+                    chn: parts.slice(1).join(' ').trim()
+                };
+            }).filter(w => w !== null && w.eng && w.chn);
+
+            if (AppState.words.length === 0) {
+                showNotification('请输入有效的单词列表！', 'error');
+                return;
+            }
+
+            AppState.timerSetting = parseInt(DOM.timerSetting.value) || 30;
+            AppState.shuffle = DOM.shuffle.checked;
+
+            if (AppState.shuffle) {
+                AppState.words = shuffleArray(AppState.words);
+            }
+
+            AppState.currentIndex = 0;
+            AppState.correctCount = 0;
+            AppState.incorrect = [];
+            AppState.results = [];
+
+            showScreen('dictation');
+            nextQuestion();
+        }
+
+        // 切换到下一个问题
+        function nextQuestion() {
+            if (AppState.currentIndex >= AppState.words.length) {
+                showResults();
+                return;
+            }
+
+            const word = AppState.words[AppState.currentIndex];
+            DOM.meaning.textContent = word.chn;
+            DOM.input.value = '';
+            DOM.input.classList.remove('correct', 'incorrect');
+            
+            // 移动端输入框自动聚焦优化
+            setTimeout(() => {
+                DOM.input.focus();
+                // 防止移动端键盘遮挡
+                if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+                    DOM.input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 100);
+
+            // 更新进度条
+            const progress = ((AppState.currentIndex) / AppState.words.length) * 100;
+            DOM.progress.style.width = `${progress}%`;
+
+            playWord();
+            startTimer();
+        }
+
+        // 播放单词发音
+        function playWord() {
+            const word = AppState.words[AppState.currentIndex].eng;
+            const utterance = new SpeechSynthesisUtterance(word);
+            utterance.lang = 'en-US';
+            utterance.rate = 0.9;
+            speechSynthesis.speak(utterance);
+        }
+
+        // 开始计时器
+        function startTimer() {
+            AppState.remainingTime = AppState.timerSetting;
+            DOM.timer.textContent = AppState.remainingTime;
+            DOM.timer.classList.remove('timer-warning');
+            
+            clearInterval(AppState.timerInterval);
+            AppState.timerInterval = setInterval(() => {
+                AppState.remainingTime--;
+                DOM.timer.textContent = AppState.remainingTime;
+                
+                // 最后5秒警告
+                if (AppState.remainingTime <= 5) {
+                    DOM.timer.classList.add('timer-warning');
+                }
+                
+                if (AppState.remainingTime <= 0) {
+                    handleIncorrect('超时');
+                }
+            }, 1000);
+        }
+
+        // 提交答案
+        function submitAnswer() {
+            const input = DOM.input.value.trim().toLowerCase();
+            const word = AppState.words[AppState.currentIndex].eng.toLowerCase();
+
+            clearInterval(AppState.timerInterval);
+
+            if (input === word) {
+                handleCorrect();
+            } else {
+                handleIncorrect('错误');
+            }
+        }
+
+        // 处理正确答案
+        function handleCorrect() {
+            AppState.correctCount++;
+            AppState.results.push({
+                word: AppState.words[AppState.currentIndex],
+                userInput: DOM.input.value,
+                correct: true
+            });
+            
+            DOM.input.classList.add('correct');
+            showNotification('回答正确！', 'success');
+            
+            AppState.currentIndex++;
+            setTimeout(nextQuestion, 1000);
+        }
+
+        // 处理错误答案
+        function handleIncorrect(reason) {
+            AppState.incorrect.push(AppState.words[AppState.currentIndex]);
+            AppState.results.push({
+                word: AppState.words[AppState.currentIndex],
+                userInput: DOM.input.value,
+                correct: false,
+                reason: reason
+            });
+            
+            DOM.input.classList.add('incorrect');
+            DOM.input.value = AppState.words[AppState.currentIndex].eng; // 显示正确答案
+            
+            if (reason === '超时') {
+                showNotification('时间到！', 'error');
+            } else {
+                showNotification('回答错误！', 'error');
+            }
+            
+            AppState.currentIndex++;
+            setTimeout(nextQuestion, 2000);
+        }
+
+        // 跳过问题
+        function skipQuestion() {
+            clearInterval(AppState.timerInterval);
+            handleIncorrect('跳过');
+        }
+
+        // 退出听写
+        function quitDictation() {
+            clearInterval(AppState.timerInterval);
+            showScreen('setup');
+        }
+
+        // 显示结果
+        function showResults() {
+            showScreen('results');
+            
+            const total = AppState.words.length;
+            const correct = AppState.correctCount;
+            co            width: 80px;
         }
         
         .checkbox-group {
