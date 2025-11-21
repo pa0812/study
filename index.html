@@ -1,4 +1,648 @@
+<!```html
 <!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英语听写</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f8ff;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* 改为flex-start以避免内容过长时居中问题 */
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            font-size: 1.2em;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            box-sizing: border-box;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            margin-bottom: 10px;
+            font-size: 1em;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        input[type="number"], input[type="checkbox"] {
+            margin: 10px 0;
+            font-size: 1em;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #meaning {
+            font-size: 2em;
+            margin: 20px 0;
+            word-wrap: break-word;
+        }
+        #input {
+            width: 80%;
+            padding: 10px;
+            font-size: 1.5em;
+            border: 2px solid #ccc;
+            border-radius: 5px;
+            text-align: center;
+            box-sizing: border-box;
+        }
+        #timer {
+            font-size: 1.5em;
+            color: #ff4500;
+            margin-left: 10px;
+        }
+        .correct {
+            border-color: green !important;
+            background-color: #e0ffe0 !important;
+        }
+        .incorrect {
+            border-color: red !important;
+            background-color: #ffe0e0 !important;
+        }
+        #result-list {
+            text-align: left;
+            margin: 20px 0;
+        }
+        #result-list div {
+            margin: 5px 0;
+            padding: 5px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            word-wrap: break-word;
+        }
+        #play-btn {
+            background-color: #2196F3;
+            margin: 10px 0;
+        }
+        #play-btn:hover {
+            background-color: #1e88e5;
+        }
+        #skip-btn {
+            background-color: #FFC107;
+        }
+        #skip-btn:hover {
+            background-color: #ffb300;
+        }
+        #submit-btn {
+            background-color: #4CAF50;
+        }
+
+        /* 响应式设计：适配手机端 */
+        @media (max-width: 600px) {
+            body {
+                font-size: 1em;
+                padding: 10px;
+            }
+            .container {
+                padding: 15px;
+            }
+            #meaning {
+                font-size: 1.5em;
+            }
+            #input {
+                width: 100%;
+                font-size: 1.2em;
+                margin-bottom: 10px;
+            }
+            #timer {
+                font-size: 1.2em;
+                display: block; /* 计时器换行显示，避免错位 */
+                margin: 10px 0;
+            }
+            button {
+                width: 100%; /* 按钮全宽 */
+                padding: 12px;
+                font-size: 1em;
+                margin: 5px 0;
+            }
+            textarea {
+                height: 150px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="setup">
+        <h1>设置界面</h1>
+        <textarea id="word-list" placeholder="输入单词列表，每行一个，例如：&#10;apple 苹果&#10;banana 香蕉"></textarea>
+        <label>倒计时（秒）：<input type="number" id="timer-setting" value="30" min="10"></label><br>
+        <label>打乱顺序：<input type="checkbox" id="shuffle"></label><br>
+        <button onclick="startDictation()">开始听写</button>
+    </div>
+
+    <div class="container" id="dictation" style="display: none;">
+        <h1>听写界面</h1>
+        <div id="meaning"></div>
+        <button id="play-btn" onclick="playWord()">播放发音</button>
+        <input type="text" id="input" placeholder="输入拼写" autofocus>
+        <span id="timer"></span><br>
+        <button id="submit-btn" onclick="submitAnswer()">提交</button>
+        <button id="skip-btn" onclick="skipQuestion()">跳过</button>
+    </div>
+
+    <div class="container" id="results" style="display: none;">
+        <h1>结果界面</h1>
+        <p>总题数: <span id="total"></span></p>
+        <p>正确数: <span id="correct"></span></p>
+        <p>错误数: <span id="incorrect-count"></span></p>
+        <p>正确率: <span id="accuracy"></span>%</p>
+        <h2>错题回顾</h2>
+        <div id="result-list"></div>
+        <button onclick="retry()">再试一次</button>
+        <button onclick="backToSetup()">返回主页</button>
+    </div>
+
+    <script>
+        let words = [];
+        let currentIndex = 0;
+        let correctCount = 0;
+        let incorrect = [];
+        let timerInterval;
+        let remainingTime;
+        let timerSetting;
+        let shuffle;
+
+        function startDictation() {
+            const list = document.getElementById('word-list').value.trim().split('\n');
+            words = list.map(line => {
+                const [eng, chn] = line.split(' ');
+                return { eng, chn };
+            }).filter(w => w.eng && w.chn);
+
+            if (words.length === 0) {
+                alert('请输入有效的单词列表！');
+                return;
+            }
+
+            timerSetting = parseInt(document.getElementById('timer-setting').value) || 30;
+            shuffle = document.getElementById('shuffle').checked;
+
+            if (shuffle) {
+                words = words.sort(() => Math.random() - 0.5);
+            }
+
+            currentIndex = 0;
+            correctCount = 0;
+            incorrect = [];
+
+            document.getElementById('setup').style.display = 'none';
+            document.getElementById('dictation').style.display = 'block';
+
+            nextQuestion();
+        }
+
+        function nextQuestion() {
+            if (currentIndex >= words.length) {
+                showResults();
+                return;
+            }
+
+            const word = words[currentIndex];
+            document.getElementById('meaning').textContent = word.chn;
+            document.getElementById('input').value = '';
+            document.getElementById('input').classList.remove('correct', 'incorrect');
+            document.getElementById('input').focus();
+
+            playWord(); // 自动播放一次
+            startTimer();
+        }
+
+        function playWord() {
+            const word = words[currentIndex].eng;
+            const utterance = new SpeechSynthesisUtterance(word);
+            utterance.lang = 'en-US';
+            speechSynthesis.speak(utterance);
+        }
+
+        function startTimer() {
+            remainingTime = timerSetting;
+            document.getElementById('timer').textContent = remainingTime;
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                remainingTime--;
+                document.getElementById('timer').textContent = remainingTime;
+                if (remainingTime <= 0) {
+                    handleIncorrect('超时');
+                }
+            }, 1000);
+        }
+
+        function submitAnswer() {
+            const input = document.getElementById('input').value.trim().toLowerCase();
+            const word = words[currentIndex].eng.toLowerCase();
+
+            clearInterval(timerInterval);
+
+            if (input === word) {
+                correctCount++;
+                document.getElementById('input').classList.add('correct');
+                setTimeout(nextQuestion, 1000);
+            } else {
+                handleIncorrect('错误');
+            }
+            currentIndex++;
+        }
+
+        function skipQuestion() {
+            clearInterval(timerInterval);
+            handleIncorrect('跳过');
+            currentIndex++;
+            nextQuestion();
+        }
+
+        function handleIncorrect(reason) {
+            const word = words[currentIndex];
+            incorrect.push(word);
+            document.getElementById('input').classList.add('incorrect');
+            document.getElementById('input').value = word.eng; // 显示正确答案
+            setTimeout(nextQuestion, 2000);
+        }
+
+        function showResults() {
+            document.getElementById('dictation').style.display = 'none';
+            document.getElementById('results').style.display = 'block';
+
+            document.getElementById('total').textContent = words.length;
+            document.getElementById('correct').textContent = correctCount;
+            document.getElementById('incorrect-count').textContent = words.length - correctCount;
+            document.getElementById('accuracy').textContent = Math.round((correctCount / words.length) * 100);
+
+            const list = document.getElementById('result-list');
+            list.innerHTML = '';
+            incorrect.forEach(w => {
+                const div = document.createElement('div');
+                div.textContent = `错误单词: ${w.eng} (${w.chn})`;
+                list.appendChild(div);
+            });
+        }
+
+        function retry() {
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('dictation').style.display = 'block';
+            currentIndex = 0;
+            correctCount = 0;
+            incorrect = [];
+            if (shuffle) {
+                words = words.sort(() => Math.random() - 0.5);
+            }
+            nextQuestion();
+        }
+
+        function backToSetup() {
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('setup').style.display = 'block';
+            document.getElementById('word-list').value = '';
+        }
+    </script>
+</body>
+</html>
+``````html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英语听写</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f8ff;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* 改为flex-start以避免内容过长时居中问题 */
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            font-size: 1.2em;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            box-sizing: border-box;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            margin-bottom: 10px;
+            font-size: 1em;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        input[type="number"], input[type="checkbox"] {
+            margin: 10px 0;
+            font-size: 1em;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #meaning {
+            font-size: 2em;
+            margin: 20px 0;
+            word-wrap: break-word;
+        }
+        #input {
+            width: 80%;
+            padding: 10px;
+            font-size: 1.5em;
+            border: 2px solid #ccc;
+            border-radius: 5px;
+            text-align: center;
+            box-sizing: border-box;
+        }
+        #timer {
+            font-size: 1.5em;
+            color: #ff4500;
+            margin-left: 10px;
+        }
+        .correct {
+            border-color: green !important;
+            background-color: #e0ffe0 !important;
+        }
+        .incorrect {
+            border-color: red !important;
+            background-color: #ffe0e0 !important;
+        }
+        #result-list {
+            text-align: left;
+            margin: 20px 0;
+        }
+        #result-list div {
+            margin: 5px 0;
+            padding: 5px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            word-wrap: break-word;
+        }
+        #play-btn {
+            background-color: #2196F3;
+            margin: 10px 0;
+        }
+        #play-btn:hover {
+            background-color: #1e88e5;
+        }
+        #skip-btn {
+            background-color: #FFC107;
+        }
+        #skip-btn:hover {
+            background-color: #ffb300;
+        }
+        #submit-btn {
+            background-color: #4CAF50;
+        }
+
+        /* 响应式设计：适配手机端 */
+        @media (max-width: 600px) {
+            body {
+                font-size: 1em;
+                padding: 10px;
+            }
+            .container {
+                padding: 15px;
+            }
+            #meaning {
+                font-size: 1.5em;
+            }
+            #input {
+                width: 100%;
+                font-size: 1.2em;
+                margin-bottom: 10px;
+            }
+            #timer {
+                font-size: 1.2em;
+                display: block; /* 计时器换行显示，避免错位 */
+                margin: 10px 0;
+            }
+            button {
+                width: 100%; /* 按钮全宽 */
+                padding: 12px;
+                font-size: 1em;
+                margin: 5px 0;
+            }
+            textarea {
+                height: 150px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="setup">
+        <h1>设置界面</h1>
+        <textarea id="word-list" placeholder="输入单词列表，每行一个，例如：&#10;apple 苹果&#10;banana 香蕉"></textarea>
+        <label>倒计时（秒）：<input type="number" id="timer-setting" value="30" min="10"></label><br>
+        <label>打乱顺序：<input type="checkbox" id="shuffle"></label><br>
+        <button onclick="startDictation()">开始听写</button>
+    </div>
+
+    <div class="container" id="dictation" style="display: none;">
+        <h1>听写界面</h1>
+        <div id="meaning"></div>
+        <button id="play-btn" onclick="playWord()">播放发音</button>
+        <input type="text" id="input" placeholder="输入拼写" autofocus>
+        <span id="timer"></span><br>
+        <button id="submit-btn" onclick="submitAnswer()">提交</button>
+        <button id="skip-btn" onclick="skipQuestion()">跳过</button>
+    </div>
+
+    <div class="container" id="results" style="display: none;">
+        <h1>结果界面</h1>
+        <p>总题数: <span id="total"></span></p>
+        <p>正确数: <span id="correct"></span></p>
+        <p>错误数: <span id="incorrect-count"></span></p>
+        <p>正确率: <span id="accuracy"></span>%</p>
+        <h2>错题回顾</h2>
+        <div id="result-list"></div>
+        <button onclick="retry()">再试一次</button>
+        <button onclick="backToSetup()">返回主页</button>
+    </div>
+
+    <script>
+        let words = [];
+        let currentIndex = 0;
+        let correctCount = 0;
+        let incorrect = [];
+        let timerInterval;
+        let remainingTime;
+        let timerSetting;
+        let shuffle;
+
+        function startDictation() {
+            const list = document.getElementById('word-list').value.trim().split('\n');
+            words = list.map(line => {
+                const [eng, chn] = line.split(' ');
+                return { eng, chn };
+            }).filter(w => w.eng && w.chn);
+
+            if (words.length === 0) {
+                alert('请输入有效的单词列表！');
+                return;
+            }
+
+            timerSetting = parseInt(document.getElementById('timer-setting').value) || 30;
+            shuffle = document.getElementById('shuffle').checked;
+
+            if (shuffle) {
+                words = words.sort(() => Math.random() - 0.5);
+            }
+
+            currentIndex = 0;
+            correctCount = 0;
+            incorrect = [];
+
+            document.getElementById('setup').style.display = 'none';
+            document.getElementById('dictation').style.display = 'block';
+
+            nextQuestion();
+        }
+
+        function nextQuestion() {
+            if (currentIndex >= words.length) {
+                showResults();
+                return;
+            }
+
+            const word = words[currentIndex];
+            document.getElementById('meaning').textContent = word.chn;
+            document.getElementById('input').value = '';
+            document.getElementById('input').classList.remove('correct', 'incorrect');
+            document.getElementById('input').focus();
+
+            playWord(); // 自动播放一次
+            startTimer();
+        }
+
+        function playWord() {
+            const word = words[currentIndex].eng;
+            const utterance = new SpeechSynthesisUtterance(word);
+            utterance.lang = 'en-US';
+            speechSynthesis.speak(utterance);
+        }
+
+        function startTimer() {
+            remainingTime = timerSetting;
+            document.getElementById('timer').textContent = remainingTime;
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                remainingTime--;
+                document.getElementById('timer').textContent = remainingTime;
+                if (remainingTime <= 0) {
+                    handleIncorrect('超时');
+                }
+            }, 1000);
+        }
+
+        function submitAnswer() {
+            const input = document.getElementById('input').value.trim().toLowerCase();
+            const word = words[currentIndex].eng.toLowerCase();
+
+            clearInterval(timerInterval);
+
+            if (input === word) {
+                correctCount++;
+                document.getElementById('input').classList.add('correct');
+                setTimeout(nextQuestion, 1000);
+            } else {
+                handleIncorrect('错误');
+            }
+            currentIndex++;
+        }
+
+        function skipQuestion() {
+            clearInterval(timerInterval);
+            handleIncorrect('跳过');
+            currentIndex++;
+            nextQuestion();
+        }
+
+        function handleIncorrect(reason) {
+            const word = words[currentIndex];
+            incorrect.push(word);
+            document.getElementById('input').classList.add('incorrect');
+            document.getElementById('input').value = word.eng; // 显示正确答案
+            setTimeout(nextQuestion, 2000);
+        }
+
+        function showResults() {
+            document.getElementById('dictation').style.display = 'none';
+            document.getElementById('results').style.display = 'block';
+
+            document.getElementById('total').textContent = words.length;
+            document.getElementById('correct').textContent = correctCount;
+            document.getElementById('incorrect-count').textContent = words.length - correctCount;
+            document.getElementById('accuracy').textContent = Math.round((correctCount / words.length) * 100);
+
+            const list = document.getElementById('result-list');
+            list.innerHTML = '';
+            incorrect.forEach(w => {
+                const div = document.createElement('div');
+                div.textContent = `错误单词: ${w.eng} (${w.chn})`;
+                list.appendChild(div);
+            });
+        }
+
+        function retry() {
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('dictation').style.display = 'block';
+            currentIndex = 0;
+            correctCount = 0;
+            incorrect = [];
+            if (shuffle) {
+                words = words.sort(() => Math.random() - 0.5);
+            }
+            nextQuestion();
+        }
+
+        function backToSetup() {
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('setup').style.display = 'block';
+            document.getElementById('word-list').value = '';
+        }
+    </script>
+</body>
+</html>
+``` html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
